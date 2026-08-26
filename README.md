@@ -63,6 +63,8 @@ We rigorously evaluated 6 different algorithms using **GridSearchCV (5-fold CV)*
 ## 🖥️ Dashboard & GUI
 The project features a fully interactive, industrial-themed dark dashboard built with Streamlit.
 
+🌍 **Live Demo:** [Predictive Maintenance System - Streamlit App](https://predictive-maintenance-system-cmzjnlstjvedkaveex8dy9.streamlit.app/)
+
 *(Add your screenshots here before uploading to GitHub)*
 - `![Dashboard Overview](link_to_image)`
 - `![Prediction Interface](link_to_image)`
