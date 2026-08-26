@@ -65,6 +65,8 @@ The project features a fully interactive, industrial-themed dark dashboard built
 
 🌍 **Live Demo:** [Predictive Maintenance System - Streamlit App](https://predictive-maintenance-system-cmzjnlstjvedkaveex8dy9.streamlit.app/)
 
+<img src="assets/qr_code.png" alt="Scan to open app" width="200"/>
+
 *(Add your screenshots here before uploading to GitHub)*
 - `![Dashboard Overview](link_to_image)`
 - `![Prediction Interface](link_to_image)`
