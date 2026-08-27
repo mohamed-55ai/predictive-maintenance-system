@@ -454,13 +454,13 @@ elif page == "Prediction":
     # ── Input Section ──
     c1, c2, c3 = st.columns(3)
     with c1:
-        air_temp = st.number_input("Air temperature (K)", min_value=290.0, max_value=310.0, value=298.0, step=0.1)
-        process_temp = st.number_input("Process temperature (K)", min_value=300.0, max_value=320.0, value=308.5, step=0.1)
+        air_temp = st.slider("Air temperature (K)", min_value=250.0, max_value=350.0, value=298.0, step=0.1)
+        process_temp = st.slider("Process temperature (K)", min_value=250.0, max_value=360.0, value=308.5, step=0.1)
     with c2:
-        rot_speed = st.number_input("Rotational speed (rpm)", min_value=1000, max_value=3000, value=1500, step=10)
-        torque = st.number_input("Torque (Nm)", min_value=3.0, max_value=80.0, value=40.0, step=0.1)
+        rot_speed = st.slider("Rotational speed (rpm)", min_value=0, max_value=5000, value=1500, step=10)
+        torque = st.slider("Torque (Nm)", min_value=0.0, max_value=150.0, value=40.0, step=0.1)
     with c3:
-        tool_wear = st.number_input("Tool wear (min)", min_value=0, max_value=255, value=100, step=1)
+        tool_wear = st.slider("Tool wear (min)", min_value=0, max_value=500, value=100, step=1)
         machine_type = st.selectbox("Machine type", ['L', 'M', 'H'])
     
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
@@ -496,19 +496,29 @@ elif page == "Prediction":
             badge_text = "At risk"
             bar_color = DANGER
         
-        c1, c2 = st.columns([1, 2])
+        c1, c2 = st.columns([1, 1])
         with c1:
             st.markdown(f'<span class="{badge_class}">{badge_text}</span>', unsafe_allow_html=True)
-            st.markdown(f"""
-            <div style="margin-top:16px">
-                <div class="metric-value" style="color:{bar_color}">{fail_prob*100:.1f}%</div>
-                <div class="metric-label">Failure probability</div>
-            </div>
-            """, unsafe_allow_html=True)
-            st.markdown(progress_bar(fail_prob, bar_color, 6), unsafe_allow_html=True)
+            if bin_proba is not None:
+                st.markdown(f'<div style="margin-top:16px"></div>', unsafe_allow_html=True)
+                fig_gauge = go.Figure(go.Indicator(
+                    mode="gauge+number",
+                    value=fail_prob * 100,
+                    number=dict(suffix="%", font=dict(size=24, color=TEXT, family="Inter")),
+                    title=dict(text="Failure Probability", font=dict(size=12, color=TEXT_SEC)),
+                    gauge=dict(
+                        axis=dict(range=[0, 100], tickcolor=TEXT_DIM, tickfont=dict(size=9, color=TEXT_DIM)),
+                        bar=dict(color=bar_color, thickness=0.7),
+                        bgcolor=BORDER,
+                        borderwidth=0,
+                    ),
+                ))
+                fig_gauge.update_layout(paper_bgcolor=BG, height=200, margin=dict(l=20, r=20, t=40, b=10))
+                st.plotly_chart(fig_gauge, use_container_width=True)
         
         with c2:
             if bin_proba is not None:
+                st.markdown(f'<div style="margin-top:50px"></div>', unsafe_allow_html=True)
                 cc1, cc2 = st.columns(2)
                 with cc1:
                     st.markdown(metric_html(f"{bin_proba[0]*100:.1f}%", "Normal confidence"), unsafe_allow_html=True)
@@ -535,17 +545,29 @@ elif page == "Prediction":
                 
                 proba_list.sort(key=lambda x: -x[1])
                 
-                for name, prob in proba_list:
-                    is_top = (prob == max(p for _, p in proba_list))
-                    val_color = DANGER if is_top else TEXT_SEC
-                    
-                    st.markdown(f"""
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0">
-                        <span style="font-size:13px;color:{TEXT if is_top else TEXT_SEC}">{name}</span>
-                        <span style="font-size:13px;color:{val_color};font-weight:500;font-family:'Inter',monospace">{prob*100:.1f}%</span>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    st.markdown(progress_bar(prob, val_color, 4), unsafe_allow_html=True)
+                names = [p[0] for p in proba_list]
+                probs = [p[1] * 100 for p in proba_list]
+                colors = [DANGER if i == 0 else TEXT_SEC for i in range(len(probs))]
+                
+                fig_bar = go.Figure(go.Bar(
+                    x=probs,
+                    y=names,
+                    orientation='h',
+                    marker_color=colors,
+                    text=[f"{p:.1f}%" for p in probs],
+                    textposition='auto',
+                    textfont=dict(color=TEXT)
+                ))
+                fig_bar.update_layout(
+                    paper_bgcolor=BG,
+                    plot_bgcolor=BG,
+                    font=dict(family="Inter", color=TEXT_SEC),
+                    xaxis=dict(showgrid=False, showticklabels=False, range=[0, max(probs) * 1.2 if probs else 100]),
+                    yaxis=dict(autorange="reversed", showgrid=False),
+                    margin=dict(l=0, r=0, t=10, b=0),
+                    height=max(150, len(names)*40)
+                )
+                st.plotly_chart(fig_bar, use_container_width=True)
             else:
                 failure_type = label_map.get(multi_pred, "Unknown")
                 st.markdown(f'<div class="metric-value" style="color:{DANGER}">{failure_type}</div>', unsafe_allow_html=True)
